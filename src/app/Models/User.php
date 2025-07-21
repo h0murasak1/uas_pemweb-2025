@@ -26,6 +26,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'email',
         'password',
+        'api_key',
+        'is_super_admin',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_super_admin' => 'boolean',
     ];
 
     /**
@@ -66,4 +74,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return true;
     }
+
+    // public function isSuperAdmin(): bool
+    // {
+    //     return $this->is_super_admin;
+    // }
 }

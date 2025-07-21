@@ -14,15 +14,25 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::firstOrCreate(
+        $superAdmin = User::updateOrCreate(
             ['email' => 'admin@admin.com'],
-            ['name' => 'Super Admin', 'password' => Hash::make('password')]
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'is_super_admin' => true,
+            ]
         );
-        $user->assignRole('super_admin');
+        
+        $superAdmin->assignRole('super_admin');
 
-        $user = User::firstOrCreate(
+        
+        $user = User::updateOrCreate(
             ['email' => 'user@admin.com'],
-            ['name' => 'User Account', 'password' => Hash::make('password')]
+            [
+                'name' => 'User Account',
+                'password' => Hash::make('password'),
+                'is_super_admin' => false,
+            ]
         );
         $user->assignRole('user');
     }

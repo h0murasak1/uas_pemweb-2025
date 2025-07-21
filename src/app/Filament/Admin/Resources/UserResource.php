@@ -8,9 +8,12 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Illuminate\Support\Str;
+use Filament\Notifications\Notification;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+
 
 class UserResource extends Resource
 {
@@ -23,6 +26,11 @@ class UserResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = -2;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user() && auth()->user()->is_super_admin;
+    }
 
     public static function getNavigationBadge(): ?string
     {
@@ -80,6 +88,9 @@ class UserResource extends Resource
                             ->required(fn (string $context): bool => $context === 'create')
                             ->columnSpan(1)
                             ->password(),
+                        Forms\Components\Toggle::make('is_super_admin')
+                            ->label('Jadikan Super Admin')
+                            ->helperText('Super Admin memiliki akses penuh ke semua fitur dan pengaturan.'),
                     ]),
 
                 Forms\Components\Section::make('Roles')
@@ -116,6 +127,8 @@ class UserResource extends Resource
                     ->badge()
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\IconColumn::make('is_super_admin')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->date()
                     ->sortable()
@@ -126,9 +139,22 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                // Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('Generate API Key')
+                    ->label('Generate API Key')
+                    ->icon('heroicon-o-key')
+                    ->action(function ($record) {
+                        $apiKey = Str::random(60);
+                        $record->update(['api_key' => $apiKey]);
+                        Notification::make()
+                            ->title('API Key Dibuat untuk ' . $record->name)
+                            ->body('Key baru: ' . $apiKey)
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
 
             ])
             ->bulkActions([
